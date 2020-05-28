@@ -1,7 +1,9 @@
 package org.jdns;
 
+import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
+import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import java.awt.BasicStroke;
 import java.awt.BorderLayout;
@@ -9,28 +11,43 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.GridBagConstraints;
 import java.awt.Point;
 import java.awt.RenderingHints;
 import java.awt.geom.Rectangle2D;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
 import java.util.HashMap;
+import java.util.TimeZone;
 
 public class JClock extends JComponent {
 
   private final DateTimeFormatter formatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.FULL);
+  private final int DEFAULT_HZ = 40;
 
   boolean antialiasing = true;
   private ZonedDateTime time = ZonedDateTime.now();
   private Point center;
   private int radius;
   private final Timer timer;
+  private boolean drawSecondHand = true;
 
   public static void main(String[] args) {
     JFrame frame = new JFrame("Clock!");
-    frame.getContentPane().add(new JClock(), BorderLayout.CENTER);
+    JClock clock = new JClock();
+    clock.setTimeZone(ZoneId.of("Australia/Sydney"));
+    frame.getContentPane().add(clock, BorderLayout.CENTER);
+    JComboBox<String> timeZoneComboBox = new JComboBox<>(TimeZone.getAvailableIDs());
+    timeZoneComboBox.setSelectedItem(ZoneId.systemDefault().toString());
+    timeZoneComboBox.addActionListener(
+        l -> {
+          if (timeZoneComboBox.getSelectedItem() != null) {
+            clock.setTimeZone(ZoneId.of(timeZoneComboBox.getSelectedItem().toString()));
+          }
+        });
+    frame.getContentPane().add(timeZoneComboBox, BorderLayout.SOUTH);
+
     frame.pack();
     frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     frame.setVisible(true);
@@ -40,19 +57,25 @@ public class JClock extends JComponent {
     setPreferredSize(new Dimension(100, 100));
     setLayout(new BorderLayout());
 
-    timer = new Timer(16, e -> setTime(ZonedDateTime.now()));
+    timer = new Timer(1000 / DEFAULT_HZ, e -> setTime(ZonedDateTime.now(time.getZone())));
     timer.start();
-
-    GridBagConstraints c = new GridBagConstraints();
-    c.weightx = 0;
-
-    c.weightx = 1;
-    c.fill = GridBagConstraints.HORIZONTAL;
   }
 
   public void setTime(ZonedDateTime when) {
-    time = when;
-    repaint();
+    if (SwingUtilities.isEventDispatchThread()) {
+      time = when;
+      repaint();
+    } else {
+      SwingUtilities.invokeLater(
+          () -> {
+            time = when;
+            repaint();
+          });
+    }
+  }
+
+  public void setTimeZone(ZoneId timeZone) {
+    SwingUtilities.invokeLater(() -> time = time.withZoneSameInstant(timeZone));
   }
 
   private void drawFace(Graphics g) {
@@ -176,7 +199,9 @@ public class JClock extends JComponent {
     drawTicks(g);
     drawHourHand(g);
     drawMinuteHand(g);
-    drawSecondHand(g);
+    if (drawSecondHand) {
+      drawSecondHand(g);
+    }
 
     String timeString = time.format(formatter);
     Rectangle2D bounds = g.getFontMetrics().getStringBounds(timeString, g);
@@ -196,5 +221,9 @@ public class JClock extends JComponent {
 
   public boolean isPaused() {
     return timer.isRunning();
+  }
+
+  public void setDrawSecondHand(boolean drawSecondHand) {
+    this.drawSecondHand = drawSecondHand;
   }
 }
