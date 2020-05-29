@@ -21,12 +21,23 @@ import java.time.format.FormatStyle;
 import java.util.HashMap;
 import java.util.TimeZone;
 
+/**
+ * A fancy analog clock.
+ * 
+ * The clock's appearance and behavior may be customized in the following ways:
+ * 
+ * <ul>
+ *   <li>may be paused or unpaused (see {@link #setPaused})</li>
+ *   <li>can display an arbitrary time (see {@link #setTime}</li>
+ *   <li>may display the time in an arbitrary time zone (see {@link #setTimeZone})</li>
+ *   <li>can hide the sweep-second hand (see {@link #setDrawSecondHand})</li>
+ * </ul>
+ */
 public class JClock extends JComponent {
 
   private final DateTimeFormatter formatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.FULL);
   private final int DEFAULT_HZ = 40;
 
-  boolean antialiasing = true;
   private ZonedDateTime time = ZonedDateTime.now();
   private Point center;
   private final Timer timer;
@@ -55,6 +66,10 @@ public class JClock extends JComponent {
     frame.setVisible(true);
   }
 
+  /**
+   * Creates a new {@code JClock}, unpaused JClock that displays the current system time and uses
+   * the system default time zone.
+   */
   public JClock() {
     setPreferredSize(new Dimension(100, 100));
     setLayout(new BorderLayout());
@@ -63,6 +78,11 @@ public class JClock extends JComponent {
     timer.start();
   }
 
+  /**
+   * Sets the displayed time. You almost certainly want to {@link #setPaused pause} the clock before
+   * calling {@code setTime}, because an unpaused clock will display the current time in the next
+   * rendering tick.
+   */
   public void setTime(ZonedDateTime when) {
     if (SwingUtilities.isEventDispatchThread()) {
       time = when;
@@ -76,6 +96,9 @@ public class JClock extends JComponent {
     }
   }
 
+  /**
+   * Sets the time zone of the clock.
+   */
   public void setTimeZone(ZoneId timeZone) {
     SwingUtilities.invokeLater(() -> time = time.withZoneSameInstant(timeZone));
   }
@@ -193,16 +216,13 @@ public class JClock extends JComponent {
     }
     center = new Point(getWidth() / 2, getHeight() / 2);
 
-    if (antialiasing) {
-      Graphics2D g2 = (Graphics2D) g;
-      var hints = new HashMap<RenderingHints.Key, Object>();
-      hints.put(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-      hints.put(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-      RenderingHints rh = new RenderingHints(hints);
-      g2.setRenderingHints(rh);
-    }
+    var hints = new HashMap<RenderingHints.Key, Object>();
+    hints.put(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+    hints.put(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+    RenderingHints rh = new RenderingHints(hints);
 
     Graphics2D g2 = (Graphics2D) g;
+    g2.setRenderingHints(rh);
     g2.setStroke(
         new BasicStroke(
             2, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND, 1.0f, new float[] {6.0f, 6.0f}, 0));
@@ -223,6 +243,10 @@ public class JClock extends JComponent {
         (int) ((0.1 * vertAxisLength) + (center.y - bounds.getHeight() / 2)));
   }
 
+  /**
+   * Pauses or unpauses the clock. You should pause the clock before setting the time, as an
+   * unpaused clock will display the current system time every rendering tick.
+   */
   public void setPaused(boolean paused) {
     if (paused) {
       timer.stop();
@@ -231,14 +255,27 @@ public class JClock extends JComponent {
     }
   }
 
+  /**
+   * Returns whether the clock is paused.
+   */
   public boolean isPaused() {
     return timer.isRunning();
   }
 
+  /**
+   * Sets whether the second hand will be drawn.
+   */
   public void setDrawSecondHand(boolean drawSecondHand) {
     this.drawSecondHand = drawSecondHand;
   }
 
+  /**
+   * Sets whether the clock is allowed to have an aspect ratio other than 1.
+   *
+   * <p>By default, {@code JClock} will have a circular face irrespective of the size of its
+   * container, its radius determined by the shortest side of the container. If {@code
+   * allowEllipticalClock} is {@code true}, the clock will be drawn to fit the container in both axes.
+   */
   public void setAllowEllipticalClock(boolean allowEllipticalClock) {
     this.allowEllipticalClock = allowEllipticalClock;
   }
