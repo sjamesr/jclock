@@ -27,18 +27,20 @@ import java.util.TimeZone;
  * The clock's appearance and behavior may be customized in the following ways:
  *
  * <ul>
- *   <li>may be paused or unpaused (see {@link #setPaused})</li>
- *   <li>can display an arbitrary time (see {@link #setTime}</li>
- *   <li>may display the time in an arbitrary time zone (see {@link #setTimeZone})</li>
- *   <li>can hide the sweep-second hand (see {@link #setDrawSecondHand})</li>
+ * <li>may be paused or unpaused (see {@link #setPaused})</li>
+ * <li>can display an arbitrary time (see {@link #setTime}</li>
+ * <li>may display the time in an arbitrary time zone (see {@link #setTimeZone})</li>
+ * <li>can hide the sweep-second hand (see {@link #setDrawSecondHand})</li>
  * </ul>
  *
- * <p>This is a Swing component and, as such, users should make all calls to the clock's methods
- * on the event dispatch thread.
+ * <p>
+ * This is a Swing component and, as such, users should make all calls to the clock's methods on the
+ * event dispatch thread.
  */
 public class JClock extends JComponent {
 
-  private final DateTimeFormatter formatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.FULL);
+  private final DateTimeFormatter formatter =
+      DateTimeFormatter.ofLocalizedDateTime(FormatStyle.FULL);
   private final int DEFAULT_HZ = 40;
 
   private ZonedDateTime time = ZonedDateTime.now();
@@ -108,7 +110,11 @@ public class JClock extends JComponent {
 
   private void drawFace(Graphics g) {
     // Draw an ellipse representing the face of the clock.
-    g.drawOval(center.x - horizAxisLength, center.y - vertAxisLength, horizAxisLength * 2, vertAxisLength * 2);
+    g.drawOval(
+        center.x - horizAxisLength,
+        center.y - vertAxisLength,
+        horizAxisLength * 2,
+        vertAxisLength * 2);
   }
 
   private void drawHourHand(Graphics g) {
@@ -275,9 +281,10 @@ public class JClock extends JComponent {
   /**
    * Sets whether the clock is allowed to have an aspect ratio other than 1.
    *
-   * <p>By default, {@code JClock} will have a circular face irrespective of the size of its
-   * container, its radius determined by the shortest side of the container. If {@code
-   * allowEllipticalClock} is {@code true}, the clock will be drawn to fit the container in both axes.
+   * <p>
+   * By default, {@code JClock} will have a circular face irrespective of the size of its container,
+   * its radius determined by the shortest side of the container. If {@code allowEllipticalClock} is
+   * {@code true}, the clock will be drawn to fit the container in both axes.
    */
   public void setAllowEllipticalClock(boolean allowEllipticalClock) {
     this.allowEllipticalClock = allowEllipticalClock;
