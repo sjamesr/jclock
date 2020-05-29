@@ -29,9 +29,11 @@ public class JClock extends JComponent {
   boolean antialiasing = true;
   private ZonedDateTime time = ZonedDateTime.now();
   private Point center;
-  private int radius;
   private final Timer timer;
   private boolean drawSecondHand = true;
+  private int horizAxisLength;
+  private int vertAxisLength;
+  private boolean allowEllipticalClock = false;
 
   public static void main(String[] args) {
     JFrame frame = new JFrame("Clock!");
@@ -80,7 +82,7 @@ public class JClock extends JComponent {
 
   private void drawFace(Graphics g) {
     // Draw an ellipse representing the face of the clock.
-    g.drawOval(center.x - radius, center.y - radius, radius * 2, radius * 2);
+    g.drawOval(center.x - horizAxisLength, center.y - vertAxisLength, horizAxisLength * 2, vertAxisLength * 2);
   }
 
   private void drawHourHand(Graphics g) {
@@ -97,14 +99,15 @@ public class JClock extends JComponent {
 
     angle += 90;
 
-    double length = 5 * radius / 7.0f;
+    double lengthX = 5 * horizAxisLength / 7.0f;
+    double lengthY = 5 * vertAxisLength / 7.0f;
 
     g.setColor(Color.BLACK);
     g.drawLine(
         center.x,
         center.y,
-        center.x + (int) (length * Math.cos(Math.toRadians(angle))),
-        center.y - (int) (length * Math.sin(Math.toRadians(angle))));
+        center.x + (int) (lengthX * Math.cos(Math.toRadians(angle))),
+        center.y - (int) (lengthY * Math.sin(Math.toRadians(angle))));
   }
 
   private void drawMinuteHand(Graphics g) {
@@ -115,13 +118,12 @@ public class JClock extends JComponent {
     int nano = time.getNano();
     angle -= nano * (0.1 / 1e9);
     angle += 90;
-    double length = radius;
     g.setColor(Color.BLACK);
     g.drawLine(
         center.x,
         center.y,
-        center.x + (int) (length * Math.cos(Math.toRadians(angle))),
-        center.y - (int) (length * Math.sin(Math.toRadians(angle))));
+        center.x + (int) (horizAxisLength * Math.cos(Math.toRadians(angle))),
+        center.y - (int) (vertAxisLength * Math.sin(Math.toRadians(angle))));
   }
 
   private void drawSecondHand(Graphics g) {
@@ -129,30 +131,31 @@ public class JClock extends JComponent {
     double angle = -(6 * second);
     angle -= 6 * (time.getNano() / 1e9);
     angle += 90;
-    double length = radius;
     g.setColor(Color.RED);
     g.drawLine(
         center.x,
         center.y,
-        center.x + (int) (length * Math.cos(Math.toRadians(angle))),
-        center.y - (int) (length * Math.sin(Math.toRadians(angle))));
+        center.x + (int) (horizAxisLength * Math.cos(Math.toRadians(angle))),
+        center.y - (int) (vertAxisLength * Math.sin(Math.toRadians(angle))));
   }
 
   private void drawTicks(Graphics g) {
     for (int hour = 0; hour < 12; hour++) {
       double angle = -(30 * hour);
       g.setColor(Color.BLACK);
-      double hourDistanceFromCenter = radius * 13.0 / 14;
+      double hourDistanceFromCenterX = horizAxisLength * 13.0 / 14;
+      double hourDistanceFromCenterY = vertAxisLength * 13.0 / 14;
       double tickCenterX =
-          center.x + (int) (hourDistanceFromCenter * Math.cos(Math.toRadians(angle)));
+          center.x + (int) (hourDistanceFromCenterX * Math.cos(Math.toRadians(angle)));
       double tickCenterY =
-          center.y - (int) (hourDistanceFromCenter * Math.sin(Math.toRadians(angle)));
-      double tickRadius = radius / 30.0;
+          center.y - (int) (hourDistanceFromCenterY * Math.sin(Math.toRadians(angle)));
+      double tickRadiusX = horizAxisLength / 30.0;
+      double tickRadiusY = vertAxisLength / 30.0;
       g.fillOval(
-          (int) (tickCenterX - tickRadius),
-          (int) (tickCenterY - tickRadius),
-          (int) (2 * tickRadius),
-          (int) (2 * tickRadius));
+          (int) (tickCenterX - tickRadiusX),
+          (int) (tickCenterY - tickRadiusY),
+          (int) (2 * tickRadiusX),
+          (int) (2 * tickRadiusY));
     }
 
     for (int minute = 0; minute < 60; minute++) {
@@ -162,23 +165,33 @@ public class JClock extends JComponent {
 
       double angle = -(6 * minute);
       g.setColor(Color.BLACK);
-      double minuteDistanceFromCenter = radius * 13.0 / 14;
+      double minuteDistanceFromCenterX = horizAxisLength * 13.0 / 14;
+      double minuteDistanceFromCenterY = vertAxisLength * 13.0 / 14;
       double tickCenterX =
-          center.x + (int) (minuteDistanceFromCenter * Math.cos(Math.toRadians(angle)));
+          center.x + (int) (minuteDistanceFromCenterX * Math.cos(Math.toRadians(angle)));
       double tickCenterY =
-          center.y - (int) (minuteDistanceFromCenter * Math.sin(Math.toRadians(angle)));
-      double tickRadius = radius / 60.0;
+          center.y - (int) (minuteDistanceFromCenterY * Math.sin(Math.toRadians(angle)));
+      double tickRadiusX = horizAxisLength / 60.0;
+      double tickRadiusY = vertAxisLength / 60.0;
       g.fillOval(
-          (int) (tickCenterX - tickRadius),
-          (int) (tickCenterY - tickRadius),
-          (int) (2 * tickRadius),
-          (int) (2 * tickRadius));
+          (int) (tickCenterX - tickRadiusX),
+          (int) (tickCenterY - tickRadiusY),
+          (int) (2 * tickRadiusX),
+          (int) (2 * tickRadiusY));
     }
   }
 
   @Override
   public void paint(Graphics g) {
     super.paint(g);
+    if (allowEllipticalClock) {
+      horizAxisLength = getWidth() / 2;
+      vertAxisLength = getHeight() / 2;
+    } else {
+      horizAxisLength = Math.min(getWidth(), getHeight()) / 2;
+      vertAxisLength = horizAxisLength;
+    }
+    center = new Point(getWidth() / 2, getHeight() / 2);
 
     if (antialiasing) {
       Graphics2D g2 = (Graphics2D) g;
@@ -189,11 +202,10 @@ public class JClock extends JComponent {
       g2.setRenderingHints(rh);
     }
 
-    center = new Point(getWidth() / 2, getHeight() / 2);
-    radius = Math.min(center.x, center.y);
-
     Graphics2D g2 = (Graphics2D) g;
-    g2.setStroke(new BasicStroke(2, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND, 1.0f, new float[]{6.0f, 6.0f}, 0));
+    g2.setStroke(
+        new BasicStroke(
+            2, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND, 1.0f, new float[] {6.0f, 6.0f}, 0));
     drawFace(g);
     g2.setStroke(new BasicStroke(2));
     drawTicks(g);
@@ -208,7 +220,7 @@ public class JClock extends JComponent {
     g.drawString(
         timeString,
         (int) (center.x - bounds.getWidth() / 2),
-        (int) ((0.1 * radius) + (center.y - bounds.getHeight() / 2)));
+        (int) ((0.1 * vertAxisLength) + (center.y - bounds.getHeight() / 2)));
   }
 
   public void setPaused(boolean paused) {
@@ -225,5 +237,9 @@ public class JClock extends JComponent {
 
   public void setDrawSecondHand(boolean drawSecondHand) {
     this.drawSecondHand = drawSecondHand;
+  }
+
+  public void setAllowEllipticalClock(boolean allowEllipticalClock) {
+    this.allowEllipticalClock = allowEllipticalClock;
   }
 }
