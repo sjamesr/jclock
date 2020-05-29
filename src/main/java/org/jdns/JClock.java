@@ -23,15 +23,18 @@ import java.util.TimeZone;
 
 /**
  * A fancy analog clock.
- * 
+ *
  * The clock's appearance and behavior may be customized in the following ways:
- * 
+ *
  * <ul>
  *   <li>may be paused or unpaused (see {@link #setPaused})</li>
  *   <li>can display an arbitrary time (see {@link #setTime}</li>
  *   <li>may display the time in an arbitrary time zone (see {@link #setTimeZone})</li>
  *   <li>can hide the sweep-second hand (see {@link #setDrawSecondHand})</li>
  * </ul>
+ *
+ * <p>This is a Swing component and, as such, users should make all calls to the clock's methods
+ * on the event dispatch thread.
  */
 public class JClock extends JComponent {
 
