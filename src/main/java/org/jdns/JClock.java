@@ -50,10 +50,12 @@ public class JClock extends JComponent {
   private int horizAxisLength;
   private int vertAxisLength;
   private boolean allowEllipticalClock = false;
+  private boolean sweepSecond = true;
 
   public static void main(String[] args) {
     JFrame frame = new JFrame("Clock!");
     JClock clock = new JClock();
+    clock.setSweepSecond(false);
     clock.setTimeZone(ZoneId.of("Australia/Sydney"));
     frame.getContentPane().add(clock, BorderLayout.CENTER);
     JComboBox<String> timeZoneComboBox = new JComboBox<>(TimeZone.getAvailableIDs());
@@ -161,7 +163,9 @@ public class JClock extends JComponent {
   private void drawSecondHand(Graphics g) {
     int second = time.getSecond();
     double angle = -(6 * second);
-    angle -= 6 * (time.getNano() / 1e9);
+    if (sweepSecond) {
+      angle -= 6 * (time.getNano() / 1e9);
+    }
     angle += 90;
     g.setColor(Color.RED);
     g.drawLine(
@@ -288,5 +292,9 @@ public class JClock extends JComponent {
    */
   public void setAllowEllipticalClock(boolean allowEllipticalClock) {
     this.allowEllipticalClock = allowEllipticalClock;
+  }
+
+  public void setSweepSecond(boolean sweepSecond){
+    this.sweepSecond = sweepSecond;
   }
 }
