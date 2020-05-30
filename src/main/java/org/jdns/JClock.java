@@ -3,6 +3,8 @@ package org.jdns;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JToggleButton;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import java.awt.BasicStroke;
@@ -58,15 +60,21 @@ public class JClock extends JComponent {
     clock.setSweepSecond(false);
     clock.setTimeZone(ZoneId.of("Australia/Sydney"));
     frame.getContentPane().add(clock, BorderLayout.CENTER);
+    JPanel bottomPanel = new JPanel();
+    JToggleButton sweepSecondButton = new JToggleButton("Sweep Second", clock.isSweepSecond());
+    sweepSecondButton.addActionListener(e -> clock.setSweepSecond(!clock.isSweepSecond()));
+    bottomPanel.add(sweepSecondButton);
     JComboBox<String> timeZoneComboBox = new JComboBox<>(TimeZone.getAvailableIDs());
     timeZoneComboBox.setSelectedItem(ZoneId.systemDefault().toString());
     timeZoneComboBox.addActionListener(
-        l -> {
+        e -> {
           if (timeZoneComboBox.getSelectedItem() != null) {
             clock.setTimeZone(ZoneId.of(timeZoneComboBox.getSelectedItem().toString()));
           }
         });
-    frame.getContentPane().add(timeZoneComboBox, BorderLayout.SOUTH);
+    bottomPanel.add(timeZoneComboBox);
+
+    frame.getContentPane().add(bottomPanel, BorderLayout.SOUTH);
 
     frame.pack();
     frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -296,5 +304,9 @@ public class JClock extends JComponent {
 
   public void setSweepSecond(boolean sweepSecond){
     this.sweepSecond = sweepSecond;
+  }
+
+  public boolean isSweepSecond() {
+    return sweepSecond;
   }
 }
