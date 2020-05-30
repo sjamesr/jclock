@@ -302,7 +302,7 @@ public class JClock extends JComponent {
     this.allowEllipticalClock = allowEllipticalClock;
   }
 
-  public void setSweepSecond(boolean sweepSecond){
+  public void setSweepSecond(boolean sweepSecond) {
     this.sweepSecond = sweepSecond;
   }
 
